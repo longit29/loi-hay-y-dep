@@ -1,50 +1,79 @@
-# Welcome to your Expo app 👋
+# Lời Hay Ý Đẹp
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Ứng dụng mobile lưu trữ những câu nói hay, ý nghĩa theo chủ đề. Hoạt động hoàn toàn offline.
 
-## Get started
+## Tính năng
 
-1. Install dependencies
+- **200 câu trích dẫn** chia theo 4 chủ đề: Cuộc sống, Tình yêu, Thành công, Bản thân
+- **Yêu thích** — lưu câu trích dẫn, tự động persist khi tắt/mở app
+- **Sao chép** — copy nội dung vào clipboard chỉ với 1 tap
+- **Dark / Light mode** — tự động theo cài đặt hệ thống
+- **Không cần tài khoản**, không cần internet
 
-   ```bash
-   npm install
-   ```
+## Yêu cầu
 
-2. Start the app
+- Node.js 18+
+- iOS Simulator hoặc Android Emulator (hoặc thiết bị thật + Expo Go)
 
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Cài đặt
 
 ```bash
-npm run reset-project
+npm install
+npx expo start
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Quét QR code bằng **Expo Go** app, hoặc nhấn `i` (iOS) / `a` (Android).
 
-## Learn more
+## Lệnh
 
-To learn more about developing your project with Expo, look at the following resources:
+```bash
+npm start              # Dev server
+npm run android        # Android emulator
+npm run ios            # iOS simulator (cần macOS)
+npm test               # 42 tests
+npm run test:coverage  # Tests + coverage
+npx tsc --noEmit       # TypeScript check
+npx expo lint          # ESLint
+```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+## Cấu trúc
 
-## Join the community
+```
+app/
+  (tabs)/
+    index.tsx       — Trang chủ: danh sách chủ đề
+    favorites.tsx   — Câu đã yêu thích
+  category/[id].tsx — Danh sách quotes trong chủ đề
+components/
+  QuoteCard.tsx     — Hiển thị quote + copy + tim
+  CategoryCard.tsx  — Card chủ đề
+  HeartButton.tsx   — Nút yêu thích với animation
+store/
+  favoritesStore.ts — Zustand + AsyncStorage persist
+data/
+  quotes.json       — 200 câu trích dẫn
+constants/
+  theme.ts          — Màu, font, spacing (light/dark)
+```
 
-Join our community of developers creating universal apps.
+## Build production
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+npm install -g eas-cli
+eas login
+eas build --profile production --platform all
+eas submit --platform ios
+eas submit --platform android
+```
+
+## Tech stack
+
+| Layer | Công nghệ |
+|-------|-----------|
+| Framework | React Native + Expo SDK 54 |
+| Navigation | Expo Router v6 |
+| State | Zustand v5 |
+| Storage | AsyncStorage v2 |
+| Language | TypeScript 5.9 |
+| Fonts | Playfair Display + Inter |
+| Tests | Jest + jest-expo (42 tests) |
