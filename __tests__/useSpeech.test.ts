@@ -99,6 +99,54 @@ describe('useSpeech — stop', () => {
   });
 });
 
+describe('useSpeech — stop race condition', () => {
+  it('ignores onDone fired after stop() — does not restart speech', () => {
+    const { result } = renderHook(() => useSpeech());
+    act(() => { result.current.startAutoPlay(quotes, 0); });
+
+    // Capture the onDone callback before stopping (simulates late callback from native layer)
+    const onDoneLate = mockSpeak.mock.calls[0][1].onDone;
+
+    act(() => { result.current.stop(); });
+    expect(result.current.isPlaying).toBe(false);
+
+    mockSpeak.mockClear();
+    act(() => { onDoneLate(); }); // expo-speech calls onDone after Speech.stop()
+
+    expect(result.current.isPlaying).toBe(false);
+    expect(result.current.currentQuoteId).toBeNull();
+    expect(mockSpeak).not.toHaveBeenCalled(); // must not have restarted
+  });
+
+  it('ignores onDone fired after startAutoPlay() restarted a new session', () => {
+    const { result } = renderHook(() => useSpeech());
+    act(() => { result.current.startAutoPlay(quotes, 0); });
+
+    const staleOnDone = mockSpeak.mock.calls[0][1].onDone;
+
+    // Restart from index 2 — staleOnDone belongs to old session
+    act(() => { result.current.startAutoPlay(quotes, 2); });
+    expect(result.current.currentQuoteId).toBe('q3');
+
+    mockSpeak.mockClear();
+    act(() => { staleOnDone(); }); // old onDone fires late
+
+    // Should stay on q3's session, not advance q1→q2
+    expect(result.current.currentQuoteId).toBe('q3');
+    expect(mockSpeak).not.toHaveBeenCalled();
+  });
+});
+
+describe('useSpeech — error handling', () => {
+  it('resets isPlaying and currentQuoteId on speech error', () => {
+    const { result } = renderHook(() => useSpeech());
+    act(() => { result.current.startAutoPlay(quotes, 0); });
+    act(() => { mockSpeak.mock.calls[0][1].onError(); });
+    expect(result.current.isPlaying).toBe(false);
+    expect(result.current.currentQuoteId).toBeNull();
+  });
+});
+
 describe('useSpeech — cleanup', () => {
   it('calls Speech.stop on unmount', () => {
     const { unmount, result } = renderHook(() => useSpeech());

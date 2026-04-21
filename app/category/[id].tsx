@@ -1,6 +1,6 @@
 import { FlatList, Text, StyleSheet, SafeAreaView } from 'react-native';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { QuoteCard } from '@/components/QuoteCard';
 import { getQuotesByCategory, getCategoryById } from '@/hooks/useQuotes';
 import { useTheme } from '@/hooks/useTheme';
@@ -10,10 +10,9 @@ import { Quote } from '@/types';
 
 export default function CategoryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const safeId = Array.isArray(id) ? id[0] : id;
   const { colors, spacing } = useTheme();
-  const category = getCategoryById(safeId);
-  const quotes = getQuotesByCategory(safeId);
+  const category = getCategoryById(id);
+  const quotes = useMemo(() => getQuotesByCategory(id), [id]);
   const navigation = useNavigation();
   const { isPlaying, currentQuoteId, startAutoPlay, stop } = useSpeech();
 

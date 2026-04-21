@@ -1,5 +1,5 @@
 import { View, FlatList, Text, StyleSheet, SafeAreaView, ActivityIndicator } from 'react-native';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { QuoteCard } from '@/components/QuoteCard';
 import { getQuotesByIds } from '@/hooks/useQuotes';
@@ -13,7 +13,7 @@ export default function FavoritesScreen() {
   const { colors, spacing } = useTheme();
   const favoriteIds = useFavoritesStore((s) => s.favoriteIds);
   const hydrated = useFavoritesStore((s) => s.hydrated);
-  const favorites = getQuotesByIds(favoriteIds);
+  const favorites = useMemo(() => getQuotesByIds(favoriteIds), [favoriteIds]);
   const { isPlaying, currentQuoteId, startAutoPlay, stop } = useSpeech();
 
   const renderItem = useCallback(({ item, index }: { item: Quote; index: number }) => (

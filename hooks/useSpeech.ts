@@ -13,15 +13,20 @@ export function useSpeech(): UseSpeechReturn {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentQuoteId, setCurrentQuoteId] = useState<string | null>(null);
   const quotesRef = useRef<Quote[]>([]);
+  // Incremented on every stop/startAutoPlay — stale onDone callbacks check this before acting
+  const sessionRef = useRef(0);
 
   const stop = useCallback(() => {
+    sessionRef.current += 1;
     Speech.stop();
     setIsPlaying(false);
     setCurrentQuoteId(null);
   }, []);
 
-  // speakAt is stable (empty deps) and reads quotesRef which is always current
-  const speakAt = useCallback((index: number) => {
+  // speakAt is stable (empty deps) and reads quotesRef which is always current.
+  // Each invocation captures `session`; if sessionRef has advanced, the callback is stale and ignored.
+  const speakAt = useCallback((session: number, index: number) => {
+    if (session !== sessionRef.current) return;
     const quotes = quotesRef.current;
     if (index >= quotes.length) {
       setIsPlaying(false);
@@ -32,8 +37,9 @@ export function useSpeech(): UseSpeechReturn {
     setCurrentQuoteId(quote.id);
     Speech.speak(`${quote.text} — ${quote.author}`, {
       language: 'vi-VN',
-      onDone: () => speakAt(index + 1),
+      onDone: () => speakAt(session, index + 1),
       onError: () => {
+        if (session !== sessionRef.current) return;
         setIsPlaying(false);
         setCurrentQuoteId(null);
       },
@@ -42,9 +48,10 @@ export function useSpeech(): UseSpeechReturn {
 
   const startAutoPlay = useCallback((quotes: Quote[], startIndex: number) => {
     Speech.stop();
+    sessionRef.current += 1;
     quotesRef.current = quotes;
     setIsPlaying(true);
-    speakAt(startIndex);
+    speakAt(sessionRef.current, startIndex);
   }, [speakAt]);
 
   useEffect(() => {
